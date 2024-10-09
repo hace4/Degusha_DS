@@ -3,6 +3,17 @@ import pyaudio
 import socketio
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
 import time
+from scipy.signal import butter, lfilter
+def butter_lowpass(cutoff, fs, order=5):
+    nyq = 0.5 * fs
+    normal_cutoff = cutoff / nyq
+    b, a = butter(order, normal_cutoff, btype='lowpass') 
+    return b, a
+
+def lowpass(data, cutoff, fs, order=5):
+    b, a = butter_lowpass(cutoff, fs, order=order)
+    y = lfilter(b, a, data)
+    return y
 
 class VoicePlayer(QMainWindow):
     def __init__(self):
@@ -15,9 +26,10 @@ class VoicePlayer(QMainWindow):
         self.sio.on('disconnect', self.on_disconnect)
         self.sio.on('voice', self.on_voice)
 
-        self.chunk_size = 8192  # Увеличиваем размер буфера
-        self.sample_rate = 44100  # Изменяем на 44100 Гц
-        self.channels = 1
+        # Настройки аудио
+        self.chunk_size = 320  # Установите размер чанка на 320
+        self.sample_rate = 16000  # Частота дискретизации
+        self.channels = 1  # Моно
         self.p = pyaudio.PyAudio()
         self.stream = self.p.open(format=pyaudio.paInt16,
                                   channels=self.channels,
@@ -51,13 +63,14 @@ class VoicePlayer(QMainWindow):
 
     def on_connect(self):
         self.label.setText("Connected")
-        self.sio.emit('register', {'public_key': 'dummy'})  # Можно заменить на реальный ключ
+        self.sio.emit('register', {'public_key': 'dummy'})
 
     def on_disconnect(self):
         self.label.setText("Disconnected")
 
     def on_voice(self, data):
         voice_data = data['voice']
+        print(f"Received audio data of length: {len(voice_data)}")  # Отладка: длина полученных данных
         self.audio_buffer.extend(voice_data)
 
         # Начать воспроизведение, если не воспроизводится в данный момент
@@ -73,7 +86,7 @@ class VoicePlayer(QMainWindow):
             
             try:
                 self.stream.write(bytes(chunk))  # Преобразуем bytearray в bytes
-                time.sleep(0.01)  # Небольшая задержка для уменьшения наложений
+               
             except Exception as e:
                 print(f"Ошибка воспроизведения аудио: {e}")
                 break  # Останавливаем воспроизведение в случае ошибки
