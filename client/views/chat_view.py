@@ -21,6 +21,9 @@ class ChatView(QMainWindow):
 
         self.send_button = QPushButton("Send")
         self.layout.addWidget(self.send_button)
+        
+        self.send_button = QPushButton("Call")
+        self.layout.addWidget(self.send_button)
 
         self.file_button = QPushButton("Send File")
         self.layout.addWidget(self.file_button)
