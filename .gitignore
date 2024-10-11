@@ -1,0 +1,12 @@
+
+test1.py
+
+client/views/__pycache__/
+
+*.pyc
+
+*.ogg
+
+build/
+
+main.spec
