@@ -6,10 +6,11 @@ class AudioController:
         self.model = model
         self.sio = socketio.Client()
         self.is_recording = False
-
+        self.UserName = ''
         self.sio.on('connect', self.on_connect)
         self.sio.on('disconnect', self.on_disconnect)
         self.sio.on('voice', self.on_voice)
+        self.sio.on('set_name', self.on_set_name)
 
     def connect(self, server_url):
         try:
@@ -44,3 +45,8 @@ class AudioController:
     def on_voice(self, data):
         voice_data = data['voice']
         self.model.play_audio(voice_data)  # Метод воспроизведения звука из модели
+        
+    def on_set_name(self, data):
+        """Обработка события получения имени от сервера."""
+        self.UserName = data['name']
+        print(f"Your assigned name is: {self.UserName}")
